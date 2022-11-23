@@ -10,6 +10,7 @@ app = Flask(__name__)
 app.config['CORS_HEADERS'] = 'Content-Type'
 CORS(app)
 
+#initalize dataframes from movie info in gcloud
 df_all_frame = pd.read_csv('gs://all_frame/all_frame.csv', storage_options={"token": "cloud"})
 maths = df_all_frame.iloc[:, 4:]
 
