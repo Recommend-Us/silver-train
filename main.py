@@ -1,6 +1,7 @@
 import os
 
 from flask import Flask, request, jsonify
+from google.cloud import secretmanager
 from flask_cors import CORS
 from flask_restful import Resource, Api, reqparse
 import pandas as pd
@@ -9,6 +10,14 @@ from rapidfuzz import process, fuzz
 app = Flask(__name__)
 app.config['CORS_HEADERS'] = 'Content-Type'
 CORS(app)
+
+client = secretmanager.SecretManagerServiceClient()
+secret_name = "projects/864523597732/secrets/tmdb_api_key/versions/1"
+# Access the secret version.
+response = client.access_secret_version(request={"name": secret_name})
+tmdb_api_key = response.payload.data.decode("UTF-8")
+print("Test fetch secret ")
+print(tmdb_api_key)
 
 #initalize dataframes from movie info in gcloud
 df_all_frame = pd.read_csv('gs://all_frame/all_frame.csv', storage_options={"token": "cloud"})
