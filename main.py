@@ -6,6 +6,8 @@ from flask_cors import CORS
 from flask_restful import Resource, Api, reqparse
 import pandas as pd
 from rapidfuzz import process, fuzz
+import tmdbsimple as tmdb
+
 
 app = Flask(__name__)
 app.config['CORS_HEADERS'] = 'Content-Type'
@@ -15,9 +17,8 @@ client = secretmanager.SecretManagerServiceClient()
 secret_name = "projects/864523597732/secrets/tmdb_api_key/versions/1"
 # Access the secret version.
 response = client.access_secret_version(request={"name": secret_name})
-tmdb_api_key = response.payload.data.decode("UTF-8")
-print("Test fetch secret ")
-print(tmdb_api_key)
+tmdb.API_KEY = response.payload.data.decode("UTF-8")
+
 
 #initalize dataframes from movie info in gcloud
 df_all_frame = pd.read_csv('gs://all_frame/all_frame.csv', storage_options={"token": "cloud"})
@@ -28,20 +29,11 @@ maths = maths.astype('float')
 dist_frame = pd.DataFrame(index=df_all_frame.index, data=df_all_frame[['movieId', 'title']])
 
 
-@app.route('/recommendations', methods=['POST'])
-def recommendations():
+@app.route('/recommendations/<media>', methods=['POST'])
+def recommendations(media):
 
-    request_json = request.get_json(silent=True)
-    request_args = request.args
 
-    if request_json and 'search_str' in request_json:
-        search_str = request_json['search_str']
-    elif request_args and 'search_str' in request_args:
-        search_str = request_args['search_str']
-    else:
-       search_str = ''
-
-    search_results = process.extract(search_str, df_all_frame['title'], scorer=fuzz.WRatio)
+    search_results = process.extract(media, df_all_frame['title'], scorer=fuzz.WRatio)
 
     base_id = search_results[0][2]
 
@@ -57,6 +49,19 @@ def recommendations():
         "recommended": recommended_movies
     },
     200)
+
+# change from movie to media later if we want to generalize
+@app.route('/movie/<movie>', methods=['POST'])
+def recommendations(movie):
+
+    search = tmdb.Search()
+    response = search.movie(query=movie)
+    print(response)
+    # return ({
+    #     "search_results": search_results,
+    #     "recommended": recommended_movies
+    # },
+    # 200)
 
 
 if __name__ == "__main__":
