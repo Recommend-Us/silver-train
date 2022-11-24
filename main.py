@@ -1,4 +1,5 @@
 import os
+import re
 
 from flask import Flask, request, jsonify
 from google.cloud import secretmanager
@@ -7,6 +8,8 @@ from flask_restful import Resource, Api, reqparse
 import pandas as pd
 from rapidfuzz import process, fuzz
 import tmdbsimple as tmdb
+from google.cloud import datastore
+
 
 
 app = Flask(__name__)
@@ -18,6 +21,9 @@ secret_name = "projects/864523597732/secrets/tmdb_api_key/versions/1"
 # Access the secret version.
 response = client.access_secret_version(request={"name": secret_name})
 tmdb.API_KEY = response.payload.data.decode("UTF-8")
+
+datastore_client = datastore.Client()
+
 
 
 #initalize dataframes from movie info in gcloud
@@ -52,16 +58,25 @@ def recommendations(media):
 
 # change from movie to media later if we want to generalize
 @app.route('/movie/<movie>', methods=['POST'])
-def recommendations(movie):
+def movie_info(movie):
 
     search = tmdb.Search()
     response = search.movie(query=movie)
-    print(response)
-    # return ({
-    #     "search_results": search_results,
-    #     "recommended": recommended_movies
-    # },
-    # 200)
+    if not response["results"]:
+        # handle no response case
+        return {"results: ": []}
+
+    first_result = response["results"][0]
+    datastore_client = datastore.Client()
+    task_key = datastore_client.key("imdb_movie", movie)
+    task = datastore.Entity(key=task_key)
+    task["data"] = first_result
+    datastore_client.put(task)
+
+    return ({
+        "result": task
+    },
+    200)
 
 
 if __name__ == "__main__":
