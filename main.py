@@ -29,6 +29,16 @@ maths = maths.astype('float')
 
 dist_frame = pd.DataFrame(index=df_all_frame.index, data=df_all_frame[['movieId', 'title']])
 
+def clean_movie_name(movie):
+    index_the = movie.find(", The")
+    if index_the != -1:
+        movie = "The " + movie[0:index_the]
+    
+    index_year = movie.find(" (")
+    if index_year != -1:
+        movie = movie[:index_year]
+    
+    return movie
 
 @app.route('/recommendations/<media>', methods=['POST'])
 def recommendations(media):
@@ -44,10 +54,12 @@ def recommendations(media):
 
     recommended_results = dist_frame.sort_values('Dist_1').head(20)
     recommended_movies = recommended_results.loc[:, "title"].reset_index(drop=True).to_dict()
-    print(recommended_movies)
+
     recommended_movies_info = []
     for movie in recommended_movies.values():
-        recommended_movies_info.append(movie_info(movie))
+        clean_movie = clean_movie_name(movie)
+        print(clean_movie)
+        recommended_movies_info.append(movie_info(clean_movie))
     return ({
         "search_results": search_results,
         "recommended": recommended_movies_info
