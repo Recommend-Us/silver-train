@@ -62,7 +62,6 @@ def recommendations(media):
     recommended_movies_info = []
     for movie in recommended_movies.values():
         clean_movie = clean_movie_name(movie)
-        print(clean_movie)
         recommended_movies_info.append(movie_info(clean_movie))
     return ({
         "search_results": search_results,
