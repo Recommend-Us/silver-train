@@ -33,6 +33,10 @@ def clean_movie_name(movie):
     index_the = movie.find(", The")
     if index_the != -1:
         movie = "The " + movie[0:index_the]
+
+    index_a = movie.find(", A")
+    if index_a != -1:
+        movie = "A " + movie[0:index_the]
     
     index_year = movie.find(" (")
     if index_year != -1:
