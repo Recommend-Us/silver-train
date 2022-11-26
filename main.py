@@ -22,9 +22,6 @@ secret_name = "projects/864523597732/secrets/tmdb_api_key/versions/1"
 response = client.access_secret_version(request={"name": secret_name})
 tmdb.API_KEY = response.payload.data.decode("UTF-8")
 
-datastore_client = datastore.Client()
-
-
 
 #initalize dataframes from movie info in gcloud
 df_all_frame = pd.read_csv('gs://all_frame/all_frame.csv', storage_options={"token": "cloud"})
@@ -59,6 +56,7 @@ def recommendations(media):
 # change from movie to media later if we want to generalize
 @app.route('/movie/<movie>', methods=['GET'])
 def movie_info(movie):
+    datastore_client = datastore.Client()
     # look if movie already in cloud datastore
     movie_key = datastore_client.key("imdb_movie", movie)
     cached_movie = datastore_client.get(movie_key)
@@ -77,7 +75,6 @@ def movie_info(movie):
         return {"results: ": []}
 
     first_result = response["results"][0]
-    datastore_client = datastore.Client()
     movie_entity = datastore.Entity(key=movie_key)
     movie_entity["data"] = first_result
 
