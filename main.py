@@ -47,9 +47,12 @@ def recommendations(media):
     recommended_results = dist_frame.sort_values('Dist_1').head(20)
     recommended_movies = recommended_results.loc[:, "title"].reset_index(drop=True).to_json()
 
+    recommended_movies_info = []
+    for movie in recommended_movies.values():
+        recommended_movies_info.append(movie_info(movie))
     return ({
         "search_results": search_results,
-        "recommended": recommended_movies
+        "recommended": recommended_movies_info
     },
     200)
 
