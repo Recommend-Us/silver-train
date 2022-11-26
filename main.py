@@ -57,8 +57,18 @@ def recommendations(media):
     200)
 
 # change from movie to media later if we want to generalize
-@app.route('/movie/<movie>', methods=['POST'])
+@app.route('/movie/<movie>', methods=['GET'])
 def movie_info(movie):
+    # look if movie already in cloud datastore
+    movie_key = datastore_client.key("imdb_movie", movie)
+    cached_movie = datastore_client.get(movie_key)
+    if cached_movie:
+        #if movie already saved
+        return ({
+            "result": cached_movie,
+            "returned_from_cache" : True
+        },
+        200)
 
     search = tmdb.Search()
     response = search.movie(query=movie)
@@ -68,13 +78,15 @@ def movie_info(movie):
 
     first_result = response["results"][0]
     datastore_client = datastore.Client()
-    task_key = datastore_client.key("imdb_movie", movie)
-    task = datastore.Entity(key=task_key)
-    task["data"] = first_result
-    datastore_client.put(task)
+    movie_entity = datastore.Entity(key=movie_key)
+    movie_entity["data"] = first_result
+
+    # save movie in datastore
+    datastore_client.put(movie_entity)
 
     return ({
-        "result": task
+        "result": movie_entity,
+        "returned_from_cache" : False
     },
     200)
 
