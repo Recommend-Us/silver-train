@@ -63,8 +63,7 @@ def movie_info(movie):
     if cached_movie:
         #if movie already saved
         return ({
-            "result": cached_movie,
-            "returned_from_cache" : True
+            "result": cached_movie
         },
         200)
 
@@ -82,8 +81,7 @@ def movie_info(movie):
     datastore_client.put(movie_entity)
 
     return ({
-        "result": movie_entity,
-        "returned_from_cache" : False
+        "result": movie_entity
     },
     200)
 
