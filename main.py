@@ -63,7 +63,7 @@ def movie_info(movie):
     if cached_movie:
         #if movie already saved
         return ({
-            "result": cached_movie
+            cached_movie
         },
         200)
 
@@ -71,7 +71,7 @@ def movie_info(movie):
     response = search.movie(query=movie)
     if not response["results"]:
         # handle no response case
-        return {"results: ": []}
+        return {[]}
 
     first_result = response["results"][0]
     movie_entity = datastore.Entity(key=movie_key)
@@ -81,7 +81,7 @@ def movie_info(movie):
     datastore_client.put(movie_entity)
 
     return ({
-        "result": movie_entity
+        movie_entity
     },
     200)
 
