@@ -1,6 +1,5 @@
 Flask==2.1.0
 google-cloud-secret-manager==2.1.0
-flask-restful
 flask_cors
 google-cloud-datastore
 gunicorn==20.1.0

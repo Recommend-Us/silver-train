@@ -1,10 +1,8 @@
 import os
-import re
 
-from flask import Flask, request, jsonify
+from flask import Flask
 from google.cloud import secretmanager
 from flask_cors import CORS
-from flask_restful import Resource, Api, reqparse
 import pandas as pd
 from rapidfuzz import process, fuzz
 import tmdbsimple as tmdb
@@ -45,8 +43,8 @@ def recommendations(media):
     dist_frame["Dist_1"] = dist
 
     recommended_results = dist_frame.sort_values('Dist_1').head(20)
-    recommended_movies = recommended_results.loc[:, "title"].reset_index(drop=True).to_json()
-
+    recommended_movies = recommended_results.loc[:, "title"].reset_index(drop=True).to_dict()
+    print(recommended_movies)
     recommended_movies_info = []
     for movie in recommended_movies.values():
         recommended_movies_info.append(movie_info(movie))
