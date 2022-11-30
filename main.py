@@ -42,8 +42,8 @@ def clean_movie_name(movie):
 def search_movie(movie, all_frame = None):
     #initalize dataframes from movie info in gcloud
     if all_frame is None:
-        df_all_frame = pd.read_csv('gs://all_frame/all_frame.csv', storage_options={"token": "cloud"})
-    search_results = process.extract(movie, df_all_frame['title'], scorer=fuzz.WRatio)
+        all_frame = pd.read_csv('gs://all_frame/all_frame.csv', storage_options={"token": "cloud"})
+    search_results = process.extract(movie, all_frame['title'], scorer=fuzz.WRatio)
     return ({"search_results": search_results}, 200)
 
 @app.route('/recommendations/<media>', methods=['GET'])
