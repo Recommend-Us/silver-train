@@ -38,6 +38,14 @@ def clean_movie_name(movie):
     
     return movie
 
+@app.route('/search_movie/<movie>', methods=['GET'])
+def search_movie(movie, all_frame = None):
+    #initalize dataframes from movie info in gcloud
+    if all_frame is None:
+        df_all_frame = pd.read_csv('gs://all_frame/all_frame.csv', storage_options={"token": "cloud"})
+    search_results = process.extract(movie, df_all_frame['title'], scorer=fuzz.WRatio)
+    return ({"search_results": search_results}, 200)
+
 @app.route('/recommendations/<media>', methods=['GET'])
 def recommendations(media):
 
@@ -48,10 +56,7 @@ def recommendations(media):
     maths = maths.astype('float')
 
     dist_frame = pd.DataFrame(index=df_all_frame.index, data=df_all_frame[['movieId', 'title']])
-
-
-    search_results = process.extract(media, df_all_frame['title'], scorer=fuzz.WRatio)
-
+    search_results = search_movie(media, df_all_frame)[0]['search_results']
     base_id = search_results[0][2]
 
     dist = ((maths - maths.iloc[base_id]) ** 2).sum(axis=1).to_list() 
@@ -66,7 +71,6 @@ def recommendations(media):
         clean_movie = clean_movie_name(movie)
         recommended_movies_info.append(movie_info(clean_movie))
     return ({
-        "search_results": search_results,
         "recommended": recommended_movies_info
     },
     200)
