@@ -95,9 +95,10 @@ def book_recommendations(book):
     base_id = search_book(book, 1, book_meta)
 
     dist_frame['Dist_1'] = ((book_pivot - book_pivot.loc[base_id]) ** 2).sum(axis=1).to_list()
-    recommendations = dist_frame.to_dict()
+    recommended_results = dist_frame.sort_values('Dist_1').head(20)
+    recommended_books = recommended_results.loc[:, "title"].reset_index(drop=True).to_dict()
     return ({
-        "recommended": recommendations
+        "recommended": recommended_books
     },
     200)
 
