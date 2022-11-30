@@ -38,7 +38,7 @@ def clean_movie_name(movie):
     
     return movie
 
-@app.route('/recommendations/<media>', methods=['POST'])
+@app.route('/recommendations/<media>', methods=['GET'])
 def recommendations(media):
 
     #initalize dataframes from movie info in gcloud
@@ -83,7 +83,7 @@ def search_book(name, index, book_meta):
 
     return selection['item_id'][index]
 
-@app.route('/book_recommendations/<book>', methods=['POST'])
+@app.route('/book_recommendations/<book>', methods=['GET'])
 def book_recommendations(book):
 
     # Get data, create usable format
