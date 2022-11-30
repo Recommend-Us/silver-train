@@ -8,3 +8,4 @@ pandas>=1.3.5
 fsspec>=2022.10.0
 gcsfs>=2022.10.0
 tmdbsimple
+python-Levenshtein

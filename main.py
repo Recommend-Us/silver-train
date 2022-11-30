@@ -7,6 +7,8 @@ import pandas as pd
 from rapidfuzz import process, fuzz
 import tmdbsimple as tmdb
 from google.cloud import datastore
+import Levenshtein
+
 
 
 
@@ -20,14 +22,6 @@ secret_name = "projects/864523597732/secrets/tmdb_api_key/versions/1"
 response = client.access_secret_version(request={"name": secret_name})
 tmdb.API_KEY = response.payload.data.decode("UTF-8")
 
-
-#initalize dataframes from movie info in gcloud
-df_all_frame = pd.read_csv('gs://all_frame/all_frame.csv', storage_options={"token": "cloud"})
-maths = df_all_frame.iloc[:, 4:]
-
-maths = maths.astype('float')
-
-dist_frame = pd.DataFrame(index=df_all_frame.index, data=df_all_frame[['movieId', 'title']])
 
 def clean_movie_name(movie):
     index_the = movie.find(", The")
@@ -46,6 +40,14 @@ def clean_movie_name(movie):
 
 @app.route('/recommendations/<media>', methods=['POST'])
 def recommendations(media):
+
+    #initalize dataframes from movie info in gcloud
+    df_all_frame = pd.read_csv('gs://all_frame/all_frame.csv', storage_options={"token": "cloud"})
+    maths = df_all_frame.iloc[:, 4:]
+
+    maths = maths.astype('float')
+
+    dist_frame = pd.DataFrame(index=df_all_frame.index, data=df_all_frame[['movieId', 'title']])
 
 
     search_results = process.extract(media, df_all_frame['title'], scorer=fuzz.WRatio)
@@ -66,6 +68,36 @@ def recommendations(media):
     return ({
         "search_results": search_results,
         "recommended": recommended_movies_info
+    },
+    200)
+
+def search_book(name, index, book_meta):
+    dist = []
+
+    for t in book_meta['title']:
+        dist.append(Levenshtein.distance(t.lower(), name.lower(), weights=(100, 1, 10)))
+
+    df = pd.DataFrame(book_meta[['title']])
+    df['dist'] = dist        
+    selection = df.sort_values('dist', ascending=True).head(10).reset_index()
+
+    return selection['item_id'][index]
+
+@app.route('/book_recommendations/<book>', methods=['POST'])
+def book_recommendations(book):
+
+    # Get data, create usable format
+    book_pivot = pd.read_csv('gs://all_frame/book_pivot.csv', storage_options={"token": "cloud"}, index_col=[0])
+    book_meta = pd.read_csv('gs://all_frame/book_meta.csv', storage_options={"token": "cloud"}, index_col=[0])
+
+    # Create frame for storing distances
+    dist_frame = pd.DataFrame(index=book_meta.index, data=book_meta[['title']])
+    base_id = search_book(book, 1, book_meta)
+
+    dist_frame['Dist_1'] = ((book_pivot - book_pivot.loc[base_id]) ** 2).sum(axis=1).to_list()
+    recommendations = dist_frame.to_dict()
+    return ({
+        "recommended": recommendations
     },
     200)
 
